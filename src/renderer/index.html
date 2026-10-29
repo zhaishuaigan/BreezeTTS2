@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src http://127.0.0.1:* ws://127.0.0.1:*;" />
+  <title>Breeze TTS 2</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+
+  <!-- ============ 标题栏（无边框 Drag Region） ============ -->
+  <header class="titlebar">
+    <div class="brand">
+      <!-- <span class="mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path d="M3 13.5c2.4 0 2.4-3 4.8-3s2.4 3 4.8 3 2.4-3 4.8-3 2.4 3 2.4 3" stroke="currentColor"
+            stroke-width="1.7" stroke-linecap="round" />
+          <path d="M3 18c2.4 0 2.4-2.2 4.8-2.2s2.4 2.2 4.8 2.2 2.4-2.2 4.8-2.2 2.4 2.2 2.4 2.2" stroke="currentColor"
+            stroke-width="1.7" stroke-linecap="round" opacity=".45" />
+          <circle cx="17.5" cy="6.5" r="3.2" stroke="currentColor" stroke-width="1.7" />
+        </svg>
+      </span> -->
+      <img src="../icon.ico" width="32" height="32" alt="Breeze TTS 2" class="brand-logo" />
+      <span class="brand-name">Breeze TTS 2</span>
+      <span class="brand-tag">本地</span>
+    </div>
+    <div class="drag"></div>
+    <div class="svc" id="svcPill" title="本地语音服务状态">
+      <span class="svc-dot"></span>
+      <span id="svcText">服务启动中…</span>
+    </div>
+    <div class="wincontrols">
+      <button id="winMin" title="最小化" tabindex="-1">
+        <svg viewBox="0 0 12 12">
+          <path d="M2.5 6h7" stroke="currentColor" stroke-width="1.2" />
+        </svg>
+      </button>
+      <button id="winMax" title="最大化" tabindex="-1">
+        <svg viewBox="0 0 12 12">
+          <rect x="2.6" y="2.6" width="6.8" height="6.8" fill="none" stroke="currentColor" stroke-width="1.2" />
+        </svg>
+      </button>
+      <button id="winClose" class="close" title="关闭" tabindex="-1">
+        <svg viewBox="0 0 12 12">
+          <path d="M3 3l6 6M9 3l-6 6" stroke="currentColor" stroke-width="1.2" />
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- ============ 启动 / 下载 / 错误 ============ -->
+  <section class="boot" id="boot">
+    <div class="boot-glow" aria-hidden="true"></div>
+    <div class="boot-card">
+      <div class="boot-logo">
+        <img src="../icon.ico" width="128" height="128" alt="Breeze TTS 2"  />
+      </div>
+      <h1>Breeze TTS 2</h1>
+      <p class="boot-sub">中英双语 · 本地语音合成</p>
+
+      <div class="boot-stage" id="bootStage">
+        <div class="ring" id="ring"></div>
+        <p class="boot-status" id="bootStatus">正在初始化...<br /> 加载模型需要大概 150秒 左右</p>
+
+        <div class="boot-progress" id="progressWrap" hidden>
+          <div class="bar">
+            <div class="bar-fill" id="progressBar"></div>
+          </div>
+          <div class="bar-meta">
+            <span id="progressLabel"></span>
+            <span id="progressPct"></span>
+          </div>
+          <div class="bar-speed" id="progressSpeed"></div>
+        </div>
+
+        <div class="boot-error" id="errorBox" hidden>
+          <pre id="errorText"></pre>
+          <div class="boot-actions">
+            <button class="btn-primary" id="btnRetry">重试</button>
+            <button class="btn-quiet" id="btnQuit">退出</button>
+          </div>
+        </div>
+      </div>
+
+      <p class="boot-foot">首次运行自动下载模型 · 语音数据全部在本机处理</p>
+    </div>
+  </section>
+
+  <!-- ============ 主界面 ============ -->
+  <div class="app" id="app" hidden>
+    <aside class="sidebar">
+      <nav class="nav">
+        <button class="nav-item active" data-panel="design">
+          <span class="nav-ico">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M12 3l1.6 5.4L19 10l-5.4 1.6L12 17l-1.6-5.4L5 10l5.4-1.6L12 3z" stroke="currentColor"
+                stroke-width="1.5" stroke-linejoin="round" />
+              <path d="M18.5 16.5l.7 2.3 2.3.7-2.3.7-.7 2.3-.7-2.3-2.3-.7 2.3-.7.7-2.3z" stroke="currentColor"
+                stroke-width="1.3" stroke-linejoin="round" />
+            </svg>
+          </span>
+          <span class="nav-txt">音色设计</span>
+        </button>
+        <button class="nav-item" data-panel="clone">
+          <span class="nav-ico">
+            <svg viewBox="0 0 24 24" fill="none">
+              <rect x="9" y="3" width="6" height="11" rx="3" stroke="currentColor" stroke-width="1.5" />
+              <path d="M5.5 11.5a6.5 6.5 0 0013 0M12 18v3" stroke="currentColor" stroke-width="1.5"
+                stroke-linecap="round" />
+            </svg>
+          </span>
+          <span class="nav-txt">音色克隆</span>
+        </button>
+        <button class="nav-item" data-panel="direction">
+          <span class="nav-ico">
+            <svg viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="1.5" />
+              <path d="M15.5 8.5l-2 5-5 2 2-5 5-2z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" />
+            </svg>
+          </span>
+          <span class="nav-txt">音色引导</span>
+        </button>
+        <button class="nav-item" data-panel="changer">
+          <span class="nav-ico">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M4 9h13l-3-3M20 15H7l3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                stroke-linejoin="round" />
+            </svg>
+          </span>
+          <span class="nav-txt">变声转换</span>
+        </button>
+        <button class="nav-item" data-panel="library">
+          <span class="nav-ico">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M4 17V7a2 2 0 012-2h2.5c.8 0 1.4.4 1.8 1l.7 1.2H18a2 2 0 012 2V17a2 2 0 01-2 2H6a2 2 0 01-2-2z"
+                stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" />
+              <path d="M8.5 13.5c1.2 0 1.2-1.5 2.4-1.5s1.2 1.5 2.4 1.5 1.2-1.5 2.2-1.5" stroke="currentColor"
+                stroke-width="1.4" stroke-linecap="round" />
+            </svg>
+          </span>
+          <span class="nav-txt">音色库</span>
+        </button>
+      </nav>
+      <div class="side-foot">
+        <div class="side-note">所有音频仅在本机生成与保存</div>
+        <div class="side-ver">Breeze-TTS-2.cpp · GGUF</div>
+      </div>
+    </aside>
+
+    <main class="workspace">
+
+      <!-- ---------- 表单区 ---------- -->
+      <div class="doc" id="doc">
+
+        <section class="panel active" id="panel-design">
+          <div class="phead">
+            <h2>音色设计</h2>
+            <p>用文字描述你想要的音色，无需任何样音。适合快速配音、旁白。</p>
+          </div>
+          <label class="field">
+            <span class="flabel">朗读文本</span>
+            <textarea id="design-text" rows="4" placeholder="欢迎登船，你的旅程从现在开始。"></textarea>
+          </label>
+          <label class="field">
+            <span class="flabel">音色描述</span>
+            <textarea id="design-instruction" rows="3"
+              placeholder="一位温和、体贴的年轻女性，发音清晰、语调平稳。">一位温和、体贴的年轻女性，发音清晰、语调平稳。</textarea>
+          </label>
+          <div class="grid2">
+            <label class="field">
+              <span class="flabel">CFG 强度</span>
+              <input id="design-cfg" type="number" value="1" min="1" max="10" step="0.5" />
+            </label>
+            <label class="field">
+              <span class="flabel">随机种子</span>
+              <input id="design-seed" type="number" value="42" />
+            </label>
+          </div>
+          <button class="btn-primary go" data-mode="tts">生成语音<kbd>Ctrl ↵</kbd></button>
+        </section>
+
+        <section class="panel" id="panel-clone">
+          <div class="phead">
+            <h2>音色克隆</h2>
+            <p>上传一段清晰的参考音频，克隆它的音色来朗读你的文本。</p>
+          </div>
+          <label class="field">
+            <span class="flabel">朗读文本</span>
+            <textarea id="clone-text" rows="4" placeholder="好久不见，能再次听到你的声音真好。"></textarea>
+          </label>
+          <label class="field">
+            <span class="flabel">已保存音色</span>
+            <select data-voice="clone">
+              <option value="">使用上传的音频片段</option>
+            </select>
+          </label>
+          <p class="vdesc" data-vdesc="clone"></p>
+          <div class="refblock" data-refblock="clone">
+            <label class="field">
+              <span class="flabel">参考音频（WAV）</span>
+              <input type="file" accept="audio/*" data-ref-audio="clone" />
+            </label>
+            <label class="field">
+              <span class="flabel">参考文本（需完全一致）</span>
+              <textarea rows="2" data-ref-text="clone" placeholder="这是参考音频的精确文本。"></textarea>
+            </label>
+            <div class="savebar">
+              <label class="field">
+                <span class="flabel">另存为</span>
+                <input type="text" placeholder="my_voice" data-save-name="clone" />
+              </label>
+              <button class="btn-quiet save-voice" data-save="clone">保存音色</button>
+            </div>
+            <label class="field">
+              <span class="flabel">描述（可选，随音色保存）</span>
+              <textarea rows="2" data-save-desc="clone" placeholder="沙哑的老年旁白，缓慢而温暖，适合有声书。"></textarea>
+            </label>
+          </div>
+          <label class="field slim">
+            <span class="flabel">随机种子</span>
+            <input id="clone-seed" type="number" value="42" />
+          </label>
+          <button class="btn-primary go" data-mode="tts">生成语音<kbd>Ctrl ↵</kbd></button>
+        </section>
+
+        <section class="panel" id="panel-direction">
+          <div class="phead">
+            <h2>音色引导</h2>
+            <p>在已有音色上追加语气、情绪、语速等表演指导。</p>
+          </div>
+          <label class="field">
+            <span class="flabel">朗读文本</span>
+            <textarea id="direction-text" rows="4" placeholder="我们需要谈谈昨晚发生的事。"></textarea>
+          </label>
+          <label class="field">
+            <span class="flabel">表演指导</span>
+            <textarea id="direction-instruction" rows="3" placeholder="语速放缓，语气克制、严肃。"></textarea>
+          </label>
+          <label class="field">
+            <span class="flabel">已保存音色</span>
+            <select data-voice="direction">
+              <option value="">使用上传的音频片段</option>
+            </select>
+          </label>
+          <p class="vdesc" data-vdesc="direction"></p>
+          <div class="refblock" data-refblock="direction">
+            <label class="field">
+              <span class="flabel">参考音频（WAV）</span>
+              <input type="file" accept="audio/*" data-ref-audio="direction" />
+            </label>
+            <label class="field">
+              <span class="flabel">参考文本（需完全一致）</span>
+              <textarea rows="2" data-ref-text="direction" placeholder="这是参考音频的精确文本。"></textarea>
+            </label>
+            <div class="savebar">
+              <label class="field">
+                <span class="flabel">另存为</span>
+                <input type="text" placeholder="my_voice" data-save-name="direction" />
+              </label>
+              <button class="btn-quiet save-voice" data-save="direction">保存音色</button>
+            </div>
+            <label class="field">
+              <span class="flabel">描述（可选，随音色保存）</span>
+              <textarea rows="2" data-save-desc="direction" placeholder="沙哑的老年旁白，缓慢而温暖，适合有声书。"></textarea>
+            </label>
+          </div>
+          <div class="grid2">
+            <label class="field">
+              <span class="flabel">CFG 强度</span>
+              <input id="direction-cfg" type="number" value="1" min="1" max="10" step="0.5" />
+            </label>
+            <label class="field">
+              <span class="flabel">随机种子</span>
+              <input id="direction-seed" type="number" value="42" />
+            </label>
+          </div>
+          <button class="btn-primary go" data-mode="tts">生成语音<kbd>Ctrl ↵</kbd></button>
+        </section>
+
+        <section class="panel" id="panel-changer">
+          <div class="phead">
+            <h2>变声转换</h2>
+            <p>用另一种音色重说已有录音，保留原文与节奏，无需文本。若源音频有旋律或强烈语调，可调高「保留旋律」。</p>
+          </div>
+          <label class="field">
+            <span class="flabel">源音频（WAV）</span>
+            <input type="file" accept="audio/*" data-source />
+          </label>
+          <label class="field">
+            <span class="flabel">目标音色</span>
+            <select data-voice="changer">
+              <option value="">使用上传的目标音频</option>
+            </select>
+          </label>
+          <p class="vdesc" data-vdesc="changer"></p>
+          <div class="refblock" data-refblock="changer">
+            <label class="field">
+              <span class="flabel">目标音色（WAV）</span>
+              <input type="file" accept="audio/*" data-ref-audio="changer" />
+            </label>
+            <label class="field">
+              <span class="flabel">目标音色文本（需完全一致）</span>
+              <textarea rows="2" data-ref-text="changer" placeholder="这是目标音色片段的精确文本。"></textarea>
+            </label>
+            <div class="savebar">
+              <label class="field">
+                <span class="flabel">另存为</span>
+                <input type="text" placeholder="my_voice" data-save-name="changer" />
+              </label>
+              <button class="btn-quiet save-voice" data-save="changer">保存音色</button>
+            </div>
+            <label class="field">
+              <span class="flabel">描述（可选，随音色保存）</span>
+              <textarea rows="2" data-save-desc="changer" placeholder="沙哑的老年旁白，缓慢而温暖，适合有声书。"></textarea>
+            </label>
+          </div>
+          <label class="field">
+            <span class="flabel">源文本（可选，让吐字更清晰）</span>
+            <textarea id="changer-text" rows="2" placeholder="留空，除非你有源音频的精确文本。"></textarea>
+          </label>
+          <div class="grid2">
+            <label class="field">
+              <span class="flabel">保留旋律</span>
+              <input id="changer-keep" type="number" value="0" min="0" max="6" step="1" />
+            </label>
+            <label class="field">
+              <span class="flabel">随机种子</span>
+              <input id="changer-seed" type="number" value="42" />
+            </label>
+          </div>
+          <button class="btn-primary go" data-mode="convert">开始转换<kbd>Ctrl ↵</kbd></button>
+        </section>
+
+        <section class="panel wide" id="panel-library">
+          <div class="phead">
+            <h2>音色库</h2>
+            <p>管理已保存的音色与备注。临时音色的备注会在服务重启后丢失。</p>
+          </div>
+          <div class="libbar">
+            <label class="field">
+              <span class="flabel">筛选</span>
+              <input id="libFilter" type="text" placeholder="名称、描述、文本或字段" />
+            </label>
+            <button class="btn-quiet" id="libRefresh">刷新</button>
+          </div>
+          <p class="libcount" id="libCount"></p>
+          <div class="vgrid" id="voiceGrid"></div>
+        </section>
+
+      </div>
+
+      <!-- ---------- 输出区 ---------- -->
+      <aside class="dock">
+        <div class="dock-head">
+          <span class="dock-title">输出</span>
+          <span class="pill" id="statusPill" data-state="idle">待命</span>
+        </div>
+
+        <div class="wave" id="waveBox">
+          <canvas id="waveCanvas"></canvas>
+          <div class="wave-empty" id="waveEmpty">生成后在此显示波形</div>
+        </div>
+
+        <div class="times">
+          <span id="timeCur">0:00</span>
+          <span id="timeTot">0:00</span>
+        </div>
+
+        <div class="transport">
+          <button class="round" id="playBtn" disabled title="播放 / 暂停" aria-label="播放">
+            <svg id="iconPlay" viewBox="0 0 24 24">
+              <path d="M8 5.5v13l10-6.5L8 5.5z" fill="currentColor" />
+            </svg>
+            <svg id="iconPause" viewBox="0 0 24 24" hidden>
+              <path d="M8.5 5.5h3v13h-3zM13 5.5h3v13h-3z" fill="currentColor" />
+            </svg>
+          </button>
+          <button class="txtbtn" id="stopBtn" hidden>停止</button>
+          <a class="txtbtn ghost" id="dlBtn" href="#" download="breeze.wav" hidden>保存 WAV</a>
+        </div>
+
+        <div class="opts" id="streamOpts">
+          <label class="switch">
+            <input type="checkbox" id="streamToggle" checked />
+            <span class="track"></span>
+            <span class="switch-txt">边生成边播放</span>
+          </label>
+          <label class="slider-row">
+            <span>缓冲 <b id="bufVal">1.25s</b></span>
+            <input type="range" id="bufRange" min="0" max="4" step="0.25" value="1.25" />
+          </label>
+        </div>
+
+        <p class="dock-hint" id="dockHint">Ctrl + Enter 快速生成</p>
+        <audio id="audio"></audio>
+      </aside>
+
+    </main>
+  </div>
+
+  <div class="toasts" id="toasts"></div>
+
+  <script src="renderer.js"></script>
+</body>
+
+</html>

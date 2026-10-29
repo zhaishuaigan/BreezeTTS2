@@ -1,0 +1,46 @@
+{
+  "name": "breeze-tts-2-electron",
+  "version": "1.0.0",
+  "description": "Breeze TTS 2 bilingual (EN/ZH) text-to-speech wrapped in an Electron app. Double-click to launch the local server and open the web UI.",
+  "main": "main.js",
+  "author": "HoppouAI (app wrapper by Doubao)",
+  "license": "Apache-2.0",
+  "scripts": {
+    "start": "npx electron .",
+    "dist": "electron-builder --win",
+    "dist-portable": "electron-builder --win portable"
+  },
+  "devDependencies": {
+    "electron": ">=30.0.0",
+    "electron-builder": ">=24.0.0"
+  },
+  "build": {
+    "appId": "ai.hoppou.breeze-tts-2.electron",
+    "productName": "Breeze TTS 2",
+    "electronVersion": "33.2.0",
+    "files": [
+      "main.js",
+      "preload.js",
+      "renderer/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "resources/bin",
+        "to": "bin"
+      }
+    ],
+    "win": {
+      "target": [
+        "portable"
+      ],
+      "artifactName": "Breeze-TTS-2-${version}-${arch}.${ext}"
+    },
+    "portable": {
+      "artifactName": "Breeze-TTS-2-${version}-${arch}.${ext}"
+    },
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    }
+  }
+}
